@@ -241,7 +241,7 @@
             {
               "name": "ipconfig1",
               "properties": {
-                "subnet": { "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', 'OnPremVnet', 'DatabaseSubnett')]" },
+                "subnet": { "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', 'OnPremVnet', 'DatabaseSubnet')]" },
                 "privateIPAllocationMethod": "Dynamic"
               }
             }
@@ -282,7 +282,7 @@
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Network/networkInterfaces', 'WebServerVM1NIC')]"
+        "[resourceId('Microsoft.Network/networkInterfaces', 'DatabaseVMNIC')]"
       ]
       },
     {
