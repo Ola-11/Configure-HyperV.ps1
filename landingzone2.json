@@ -1,98 +1,315 @@
 {
-  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-  "contentVersion": "1.0.0.0",
-  "parameters": {
-    "location": {
-      "type": "string",
-      "defaultValue": "westus2",
-      "metadata": {
-        "description": "Region to deploy the resources"
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "location": {
+        "type": "string",
+        "defaultValue": "westus2",
+        "metadata": {
+          "description": "Region to deploy the resources"
+        }
+      },
+      "adminUsername": {
+        "type": "string",
+        "defaultValue": "azureuser",
+        "metadata": {
+          "description": "Admin username for all VMs"
+        }
+      },
+      "adminPassword": {
+        "type": "securestring",
+        "metadata": {
+          "description": "Admin password for all VMs"
+        }
       }
     },
-    "adminUsername": {
-      "type": "string",
-      "defaultValue": "azureuser",
-      "metadata": {
-        "description": "Admin username for all VMs"
-      }
-    },
-    "adminPassword": {
-      "type": "securestring",
-      "metadata": {
-        "description": "Admin password for all VMs"
-      }
-    }
-  },
-  "resources": [
-    {
-      "type": "Microsoft.Network/virtualNetworks",
-      "apiVersion": "2021-03-01",
-      "name": "OnPremVnet",
-      "location": "[parameters('location')]",
-      "properties": {
-        "addressSpace": {
-          "addressPrefixes": ["10.0.0.0/16"]
-        },
-        "subnets": [
-          {
-            "name": "HyperVSubnet",
-            "properties": { "addressPrefix": "10.0.1.0/24" }
+    "resources": [
+      {
+        "type": "Microsoft.Network/virtualNetworks",
+        "apiVersion": "2021-03-01",
+        "name": "OnPremVnet",
+        "location": "[parameters('location')]",
+        "properties": {
+          "addressSpace": {
+            "addressPrefixes": ["10.0.0.0/16"]
           },
-          {
-            "name": "WebServerSubnet",
-            "properties": { "addressPrefix": "10.0.2.0/24" }
-          },
-          {
-            "name": "DatabaseSubnet",
-            "properties": { "addressPrefix": "10.0.3.0/24" }
-          },
-          {
-            "name": "WAFSubnet",
-            "properties": { "addressPrefix": "10.0.4.0/24" }
-          }
-        ]
-      }
-    },
-    {
-      "type": "Microsoft.Network/publicIPAddresses",
-      "apiVersion": "2021-03-01",
-      "name": "WebServerVM1PublicIP",
-      "location": "[parameters('location')]",
-      "properties": {
-        "publicIPAllocationMethod": "Dynamic"
-      }
-    },
-    {
-      "type": "Microsoft.Network/networkInterfaces",
-      "apiVersion": "2021-03-01",
-      "name": "WebServerVM1NIC",
-      "location": "[parameters('location')]",
-      "properties": {
-        "ipConfigurations": [
-          {
-            "name": "ipconfig1",
-            "properties": {
-              "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses', 'WebServerVM1PublicIP')]"
-              },
-              "subnet": {
-                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', 'OnPremVnet', 'WebServerSubnet')]"
-              },
-              "privateIPAllocationMethod": "Dynamic"
+          "subnets": [
+            { "name": "HyperVSubnet", "properties": { "addressPrefix": "10.0.1.0/24" } },
+            { "name": "WebServerSubnet", "properties": { "addressPrefix": "10.0.2.0/24" } },
+            { "name": "DatabaseSubnet", "properties": { "addressPrefix": "10.0.3.0/24" } },
+            { "name": "WAFSubnet", "properties": { "addressPrefix": "10.0.4.0/24" } }
+          ]
+        }
+      },
+      {
+        "type": "Microsoft.Network/networkSecurityGroups",
+        "apiVersion": "2021-02-01",
+        "name": "OnPremNSG",
+        "location": "[parameters('location')]",
+        "properties": {
+          "securityRules": [
+            {
+              "name": "AllowWebTraffic",
+              "properties": {
+                "priority": 100,
+                "direction": "Inbound",
+                "access": "Allow",
+                "protocol": "Tcp",
+                "sourceAddressPrefix": "*",
+                "destinationAddressPrefix": "*",
+                "destinationPortRange": "80",
+                "sourcePortRange": "*"
+              }
+            },
+            {
+              "name": "AllowDatabaseAccess",
+              "properties": {
+                "priority": 101,
+                "direction": "Inbound",
+                "access": "Allow",
+                "protocol": "Tcp",
+                "sourceAddressPrefix": "*",
+                "destinationAddressPrefix": "*",
+                "destinationPortRange": "1433",
+                "sourcePortRange": "*"
+              }
             }
+          ]
+        }
+      },
+      
+      {
+        "type": "Microsoft.Network/networkInterfaces",
+        "apiVersion": "2021-03-01",
+        "name": "WebServerVM2NIC",
+        "location": "[parameters('location')]",
+        "properties": {
+          "ipConfigurations": [
+            {
+              "name": "ipconfig1",
+              "properties": {
+                "subnet": { "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', 'OnPremVnet', 'WebServerSubnet')]" },
+                "privateIPAllocationMethod": "Dynamic"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "type": "Microsoft.Compute/virtualMachines",
+        "apiVersion": "2021-03-01",
+        "name": "WebServerVM2",
+        "location": "[parameters('location')]",
+        "properties": {
+          "hardwareProfile": { "vmSize": "Standard_B1ms" },
+          "osProfile": {
+            "computerName": "WebServerVM2",
+            "adminUsername": "[parameters('adminUsername')]",
+            "adminPassword": "[parameters('adminPassword')]"
+          },
+          "storageProfile": {
+            "imageReference": {
+              "publisher": "MicrosoftWindowsServer",
+              "offer": "WindowsServer",
+              "sku": "2019-Datacenter",
+              "version": "latest"
+            },
+            "osDisk": {
+              "createOption": "FromImage",
+              "managedDisk": { "storageAccountType": "Standard_LRS" }
+            }
+          },
+          "networkProfile": {
+            "networkInterfaces": [
+              { "id": "[resourceId('Microsoft.Network/networkInterfaces', 'WebServerVM2NIC')]" }
+            ]
           }
-        ]
-      }
+        }
+      },
+
+      {
+        "type": "Microsoft.Network/networkInterfaces",
+        "apiVersion": "2021-03-01",
+        "name": "WAFVMNIC",
+        "location": "[parameters('location')]",
+        "properties": {
+          "ipConfigurations": [
+            {
+              "name": "ipconfig2",
+              "properties": {
+                "subnet": { "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', 'OnPremVnet', 'WAFSubnet')]" },
+                "privateIPAllocationMethod": "Dynamic"
+              }
+            }
+          ]
+        }
+      },
+      
+      {
+        "type": "Microsoft.Compute/virtualMachines",
+        "apiVersion": "2021-03-01",
+        "name": "WAFVM",
+        "location": "[parameters('location')]",
+        "properties": {
+          "hardwareProfile": { "vmSize": "Standard_B1ms" },
+          "osProfile": {
+            "computerName": "WAFVM",
+            "adminUsername": "[parameters('adminUsername')]",
+            "adminPassword": "[parameters('adminPassword')]"
+          },
+          "storageProfile": {
+            "imageReference": {
+              "publisher": "Canonical",
+              "offer": "UbuntuServer",
+              "sku": "18.04-LTS",
+              "version": "latest"
+            },
+            "osDisk": {
+              "createOption": "FromImage",
+              "managedDisk": { "storageAccountType": "Standard_LRS" }
+            }
+          },
+          "networkProfile": {
+            "networkInterfaces": [
+              { "id": "[resourceId('Microsoft.Network/networkInterfaces', 'WAFVMNIC')]" }
+            ]
+          }
+        }
+      },
+
+      {
+        "type": "Microsoft.Network/networkInterfaces",
+        "apiVersion": "2021-03-01",
+        "name": "HyperVHostNIC",
+        "location": "[parameters('location')]",
+        "properties": {
+          "ipConfigurations": [
+            {
+              "name": "ipconfig1",
+              "properties": {
+                "subnet": { "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', 'OnPremVnet', 'HyperVSubnet')]" },
+                "privateIPAllocationMethod": "Dynamic"
+              }
+            }
+          ]
+        }
+      },
+
+
+      {
+      "type": "Microsoft.Compute/virtualMachines",
+      "apiVersion": "2021-03-01",
+      "name": "HyperVHostVM",
+      "location": "[parameters('location')]",
+      "properties": {
+        "hardwareProfile": { "vmSize": "Standard_D2_v2" },
+        "osProfile": {
+          "computerName": "HyperVHostVM",
+          "adminUsername": "[parameters('adminUsername')]",
+          "adminPassword": "[parameters('adminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "MicrosoftWindowsServer",
+            "offer": "WindowsServer",
+            "sku": "2019-Datacenter",
+            "version": "latest"
+          },
+          "osDisk": {
+            "createOption": "FromImage",
+            "managedDisk": { "storageAccountType": "Standard_LRS" }
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            { "id": "[resourceId('Microsoft.Network/networkInterfaces', 'HyperVHostNIC')]" }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkInterfaces', 'HyperVHostNIC')]"
+      ]
     },
+
+    {
+        "type": "Microsoft.Network/networkInterfaces",
+        "apiVersion": "2021-03-01",
+        "name": "DatabaseVMNIC",
+        "location": "[parameters('location')]",
+        "properties": {
+          "ipConfigurations": [
+            {
+              "name": "ipconfig1",
+              "properties": {
+                "subnet": { "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', 'OnPremVnet', 'DatabaseSubnett')]" },
+                "privateIPAllocationMethod": "Dynamic"
+              }
+            }
+          ]
+        }
+      },
+
+      {
+      "type": "Microsoft.Compute/virtualMachines",
+      "apiVersion": "2021-03-01",
+      "location": "[parameters('location')]",
+      "name": "DatabaseVM",
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "Standard_B1ms"
+        },
+        "osProfile": {
+          "computerName": "DatabaseVM",
+          "adminUsername": "[parameters('adminUsername')]",
+          "adminPassword": "[parameters('adminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "MicrosoftWindowsServer",
+            "offer": "WindowsServer",
+            "sku": "2019-Datacenter",
+            "version": "latest"
+          },
+          "osDisk": {
+            "createOption": "FromImage",
+            "managedDisk": { "storageAccountType": "Standard_LRS" }
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            { "id": "[resourceId('Microsoft.Network/networkInterfaces', 'DatabaseVMNIC')]" }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkInterfaces', 'WebServerVM1NIC')]"
+      ]
+      },
+    {
+        "type": "Microsoft.Network/networkInterfaces",
+        "apiVersion": "2021-03-01",
+        "name": "WebServerVM1NIC",
+        "location": "[parameters('location')]",
+        "properties": {
+          "ipConfigurations": [
+            {
+              "name": "ipconfig1",
+              "properties": {
+                "subnet": { "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', 'OnPremVnet', 'WebServerSubnet')]" },
+                "privateIPAllocationMethod": "Dynamic"
+              }
+            }
+          ]
+        }
+      },
+
     {
       "type": "Microsoft.Compute/virtualMachines",
       "apiVersion": "2021-03-01",
       "name": "WebServerVM1",
       "location": "[parameters('location')]",
       "properties": {
-        "hardwareProfile": {
-          "vmSize": "Standard_B1ms"
-        },
+        "hardwareProfile": { "vmSize": "Standard_B1ms" },
         "osProfile": {
           "computerName": "WebServerVM1",
           "adminUsername": "[parameters('adminUsername')]",
@@ -107,25 +324,21 @@
           },
           "osDisk": {
             "createOption": "FromImage",
-            "managedDisk": {
-              "storageAccountType": "Standard_LRS"
-            }
+            "managedDisk": { "storageAccountType": "Standard_LRS" }
           }
         },
         "networkProfile": {
           "networkInterfaces": [
-            {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces', 'WebServerVM1NIC')]"
-            }
+            { "id": "[resourceId('Microsoft.Network/networkInterfaces', 'WebServerVM1NIC')]" }
           ]
         }
-      }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkInterfaces', 'WebServerVM1NIC')]"
+      ]
     }
-  ],
-  "outputs": {
-    "WebServerVM1PublicIP": {
-      "type": "string",
-      "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', 'WebServerVM1PublicIP')).ipAddress]"
-    }
-  }
+  ]
 }
+    
+
+  
