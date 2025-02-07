@@ -74,7 +74,7 @@
     "subnetAddressPrefixVM": "10.0.1.0/24",
     "subnetAddressPrefixGateway": "10.0.2.0/24",
     "subnetNameVM": "subnet-vm",
-    "subnetNameGateway": "Onprem-GatewaySubnet",
+    "subnetNameGateway": "GatewaySubnet",
     "publicIPName": "[concat(parameters('vpnGatewayName'), '-ip')]",
     "vmSize": "Standard_B2s",
     "imagePublisher": "Canonical",
