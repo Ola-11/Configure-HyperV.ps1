@@ -4,7 +4,7 @@
   "parameters": {
     "vmName": {
       "type": "string",
-      "defaultValue": "webserver-vm",
+      "defaultValue": "nodejs-vm",
       "metadata": {
         "description": "Name of the Virtual Machine"
       }
@@ -37,14 +37,14 @@
     },
     "vnetName": {
       "type": "string",
-      "defaultValue": "OnPrem-Vnet",
+      "defaultValue": "vnet",
       "metadata": {
         "description": "Name of the Virtual Network"
       }
     },
     "vpnGatewayName": {
       "type": "string",
-      "defaultValue": "VpnGw-OnPrem",
+      "defaultValue": "vpngw",
       "metadata": {
         "description": "Name of the VPN Gateway"
       }
@@ -73,9 +73,9 @@
     "vnetAddressPrefix": "10.0.0.0/16",
     "subnetAddressPrefixVM": "10.0.1.0/24",
     "subnetAddressPrefixGateway": "10.0.2.0/24",
-    "subnetNameVM": "webserver-vm",
-    "subnetNameGateway": "OnPrem-GatewaySubnet",
-    "publicIPName": "[concat(parameters('OnPremvpnGatewayName'), '-ip')]",
+    "subnetNameVM": "subnet-vm",
+    "subnetNameGateway": "GatewaySubnet",
+    "publicIPName": "[concat(parameters('vpnGatewayName'), '-ip')]",
     "vmSize": "Standard_B2s",
     "imagePublisher": "Canonical",
     "imageOffer": "UbuntuServer",
