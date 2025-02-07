@@ -360,7 +360,7 @@
     "vpnGatewayPublicIP": {
       "type": "string",
       "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPName'))).ipAddress]"
-    }
+    },
   "sqlDatabaseName": {
     "type": "string",
     "value": "[parameters('sqlDatabaseName')]"
