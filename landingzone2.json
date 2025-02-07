@@ -4,7 +4,7 @@
   "parameters": {
     "vmName": {
       "type": "string",
-      "defaultValue": "nodejs-vm",
+      "defaultValue": "Webserver",
       "metadata": {
         "description": "Name of the Virtual Machine"
       }
@@ -23,28 +23,28 @@
     },
     "sqlServerName": {
       "type": "string",
-      "defaultValue": "sqlserver",
+      "defaultValue": "DB-sqlserver",
       "metadata": {
         "description": "Name of the SQL Server"
       }
     },
     "sqlDatabaseName": {
       "type": "string",
-      "defaultValue": "sqldb",
+      "defaultValue": "DB-sqldb",
       "metadata": {
         "description": "Name of the SQL Database"
       }
     },
     "vnetName": {
       "type": "string",
-      "defaultValue": "vnet",
+      "defaultValue": "Onprem-vnet",
       "metadata": {
         "description": "Name of the Virtual Network"
       }
     },
     "vpnGatewayName": {
       "type": "string",
-      "defaultValue": "vpngw",
+      "defaultValue": "Vpngw-Onprem",
       "metadata": {
         "description": "Name of the VPN Gateway"
       }
@@ -74,7 +74,7 @@
     "subnetAddressPrefixVM": "10.0.1.0/24",
     "subnetAddressPrefixGateway": "10.0.2.0/24",
     "subnetNameVM": "subnet-vm",
-    "subnetNameGateway": "GatewaySubnet",
+    "subnetNameGateway": "Onprem-GatewaySubnet",
     "publicIPName": "[concat(parameters('vpnGatewayName'), '-ip')]",
     "vmSize": "Standard_B2s",
     "imagePublisher": "Canonical",
@@ -249,7 +249,8 @@
             "autoUpgradeMinorVersion": true,
             "settings": {
               "fileUris": [
-                "https://raw.githubusercontent.com/your-repo/nodejs-setup.sh"
+                "https://raw.githubusercontent.com/Ola-11/Configure-HyperV.ps1
+/main/nodejs-setup.sh"
               ],
               "commandToExecute": "bash nodejs-setup.sh"
             }
@@ -355,5 +356,9 @@
       "type": "string",
       "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPName'))).ipAddress]"
     }
+  "sqlDatabaseName": {
+    "type": "string",
+    "value": "[parameters('sqlDatabaseName')]"
+  }
   }
 }
