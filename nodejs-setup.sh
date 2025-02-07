@@ -1,30 +1,53 @@
 #!/bin/bash
+set -e # Exit immediately on error
 
-# Install Node.js and npm
+# Receive parameters from ARM template
+SQL_SERVER=$1
+SQL_DATABASE=$2
+SQL_USER=$3
+SQL_PASSWORD=$4
+
+# Validate parameters
+if [ -z "$SQL_SERVER" ] || [ -z "$SQL_DATABASE" ] || [ -z "$SQL_USER" ] || [ -z "$SQL_PASSWORD" ]; then
+  echo "Error: Missing SQL connection parameters!"
+  exit 1
+fi
+
+# System updates and dependencies
+sudo apt-get update -y
+sudo apt-get install -y build-essential
+
+# Install Node.js 18.x
 curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
 sudo apt-get install -y nodejs
 
-# Install PM2 process manager
+# Install PM2 globally
 sudo npm install -g pm2
 
 # Create project directory
-mkdir /home/nodeapp && cd /home/nodeapp
+APP_DIR="/home/nodeapp"
+sudo mkdir -p $APP_DIR
+sudo chown $(whoami):$(whoami) $APP_DIR
+cd $APP_DIR
 
-# Initialize Node.js project
+# Initialize Node project
 npm init -y
 
 # Install required packages
 npm install express mssql dotenv
 
-# Create environment file with SQL connection details
+# Create environment file
 cat > .env <<EOL
-SQL_SERVER=<your-sql-server.database.windows.net>
-SQL_DATABASE=<your-database-name>
-SQL_USER=<your-sql-username>
-SQL_PASSWORD=<your-sql-password>
+SQL_SERVER=${SQL_SERVER}
+SQL_DATABASE=${SQL_DATABASE}
+SQL_USER=${SQL_USER}
+SQL_PASSWORD=${SQL_PASSWORD}
 EOL
 
-# Create basic Express app
+# Secure environment file
+chmod 600 .env
+
+# Create application file (same as your original app.js content)
 cat > app.js <<EOL
 require('dotenv').config();
 const express = require('express');
@@ -89,12 +112,16 @@ initializeDatabase().then(() => {
 });
 EOL
 
-# Start application with PM2 and set up startup script
+# Configure firewall
+sudo ufw allow 80
+sudo ufw allow 3000
+sudo ufw --force enable
+
+# Start application with PM2
 pm2 start app.js
 pm2 startup
 pm2 save
 
-# Allow HTTP traffic
-sudo ufw allow 80
-sudo ufw allow 3000
-sudo ufw enable
+# Verify setup
+echo "Installation complete!"
+echo "Check application status with: pm2 list"
