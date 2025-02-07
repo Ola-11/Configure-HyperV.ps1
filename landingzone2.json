@@ -240,7 +240,8 @@
           "name": "[concat(parameters('vmName'), '/installnodejs')]",
           "apiVersion": "2023-03-01",
           "dependsOn": [
-            "[resourceId('Microsoft.Compute/virtualMachines', parameters('vmName'))]"
+            "[resourceId('Microsoft.Compute/virtualMachines', parameters('vmName'))]",
+            "[resourceId('Microsoft.Sql/servers', parameters('sqlServerName'))]"
           ],
           "properties": {
             "publisher": "Microsoft.Azure.Extensions",
@@ -252,7 +253,11 @@
                 "https://raw.githubusercontent.com/Ola-11/Configure-HyperV.ps1
 /main/nodejs-setup.sh"
               ],
-              "commandToExecute": "bash nodejs-setup.sh"
+              "commandToExecute": "[concat('bash nodejs-setup.sh ', 
+        reference(resourceId('Microsoft.Sql/servers', parameters('sqlServerName'))).fullyQualifiedDomainName, ' ',
+        parameters('sqlDatabaseName'), ' ',
+        parameters('sqlAdminUsername'), ' ',
+        parameters('sqlAdminPassword'))]"
             }
           }
         }
