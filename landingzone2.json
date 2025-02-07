@@ -44,7 +44,7 @@
     },
     "vpnGatewayName": {
       "type": "string",
-      "defaultValue": "Vpngw-Onprem",
+      "defaultValue": "GatewaySubnet",
       "metadata": {
         "description": "Name of the VPN Gateway"
       }
