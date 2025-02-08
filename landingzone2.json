@@ -321,8 +321,11 @@
       "apiVersion": "2023-05-01",
       "name": "[variables('publicIPName')]",
       "location": "[parameters('location')]",
+      "sku": {
+            "name": "Standard"
+      },
       "properties": {
-        "publicIPAllocationMethod": "Dynamic"
+        "publicIPAllocationMethod": "Static"
       }
     },
     {
@@ -339,7 +342,6 @@
           {
             "name": "vnetGatewayConfig",
             "properties": {
-              "privateIPAllocationMethod": "Dynamic",
               "subnet": {
                 "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), variables('subnetNameGateway'))]"
               },
