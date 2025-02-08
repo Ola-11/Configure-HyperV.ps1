@@ -101,7 +101,13 @@
           {
             "name": "[variables('subnetNameVM')]",
             "properties": {
-              "addressPrefix": "[variables('subnetAddressPrefixVM')]"
+              "addressPrefix": "[variables('subnetAddressPrefixVM')]",
+              "serviceEndpoints": [
+                {
+                   "service": "Microsoft.Sql",
+                   "locations": ["*"]
+              }
+            ]
             }
           },
           {
@@ -156,8 +162,11 @@
       "apiVersion": "2023-05-01",
       "name": "[variables('publicIPAddressName')]",
       "location": "[parameters('location')]",
+      "sku": {
+        "name": "Standard"
+      },
       "properties": {
-        "publicIPAllocationMethod": "Dynamic"
+        "publicIPAllocationMethod": "Static"
       }
     },
     // Network Interface
@@ -176,9 +185,6 @@
           {
             "name": "ipconfig1",
             "location": "[parameters('location')]",
-            "sku": {
-              "name": "Standard"
-            },
             "properties": {
               "privateIPAllocationMethod": "Static",
               "privateIPAddress": "10.0.1.10",
