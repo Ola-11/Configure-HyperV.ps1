@@ -181,6 +181,7 @@
             },
             "properties": {
               "privateIPAllocationMethod": "Static",
+              "privateIPAddress": "10.0.1.10",
               "publicIPAddress": {
                 "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))]"
               },
