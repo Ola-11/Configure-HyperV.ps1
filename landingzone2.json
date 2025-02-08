@@ -23,10 +23,10 @@
     },
     "sqlServerName": {
       "type": "string",
-      "defaultValue": "DB-sqlserver",
+      "defaultValue": "[concat('sql-', uniqueString(resourceGroup().id))]",
       "metadata": {
-        "description": "Name of the SQL Server"
-      }
+           "description": "SQL Server name (must be globally unique)"
+     }
     },
     "sqlDatabaseName": {
       "type": "string",
@@ -175,8 +175,12 @@
         "ipConfigurations": [
           {
             "name": "ipconfig1",
+            "location": "[parameters('location')]",
+            "sku": {
+              "name": "Standard"
+            },
             "properties": {
-              "privateIPAllocationMethod": "Dynamic",
+              "privateIPAllocationMethod": "Static",
               "publicIPAddress": {
                 "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))]"
               },
