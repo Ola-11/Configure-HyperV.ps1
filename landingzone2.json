@@ -249,6 +249,7 @@
         {
           "type": "Microsoft.Compute/virtualMachines/extensions",
           "name": "[concat(parameters('vmName'), '/installnodejs')]",
+          "location": "[parameters('location')]",
           "apiVersion": "2023-03-01",
           "dependsOn": [
             "[resourceId('Microsoft.Compute/virtualMachines', parameters('vmName'))]",
@@ -304,6 +305,7 @@
         {
           "type": "virtualNetworkRules",
           "apiVersion": "2022-08-01-preview",
+          "location": "[parameters('location')]",
           "name": "allow-vnet",
           "dependsOn": [
             "[resourceId('Microsoft.Sql/servers', parameters('sqlServerName'))]",
